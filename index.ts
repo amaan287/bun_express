@@ -1,9 +1,11 @@
 import express,{ type MiniResponse } from "./express"
 
 const app = express()
-app.get("/",(req:Request,res:MiniResponse)=>{
-    res.set("X-Test", "123")   
-    res.set({ A: "1", B: "2"})
-    res.status(201).send({hello:"Hello bun js"})
+app.get("/",async(req:Request,res:MiniResponse)=>{
+    await new Promise(r => setTimeout(r, 1000))
+    res.json({ message: "Async works!" })
 })
+app.post('/',async(req:Request,res:MiniResponse)=>{
+res.json({message:"POST is working"})
+        })
 app.listen(3000)
