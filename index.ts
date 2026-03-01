@@ -1,4 +1,5 @@
-import express,{ type MiniResponse } from "./express"
+import express from "./express"
+import type { MiniResponse } from "./express/types"
 
 const app = express()
 app.get("/",async(req:Request,res:MiniResponse)=>{
