@@ -10,3 +10,12 @@ export interface MiniResponse {
     json(body: any): void
     redirect(url: string, status: number): void
 }
+
+export interface CorsOptions {
+    origin?: string | string[] | ((origin: string) => boolean)
+    methods?: string[]
+    allowedHeaders?: string[]
+    exposedHeaders?: string[]
+    credentials?: boolean
+    maxAge?: number
+}
