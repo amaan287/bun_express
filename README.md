@@ -1,10 +1,10 @@
-# Nexora
+# bun_express
 
-Nexora is a Bun-first, Express-like web framework with strict TypeScript types, a deterministic middleware pipeline, and lightweight routing helpers.
+bun_express is a Bun-first, Express-like web framework with strict TypeScript types, a deterministic middleware pipeline, and lightweight routing helpers.
 
 ## v1 Direction
 
-Nexora v1 follows an **Express-like developer API** on top of a **Bun-native Request/Response runtime**.
+bun_express v1 follows an **Express-like developer API** on top of a **Bun-native Request/Response runtime**.
 
 - Express-style ergonomics: `app.use`, `app.get`, `req.params`, `res.json`, error middleware.
 - Bun-native execution: native `Request` and `Response` objects with no Node.js adapter layer.
@@ -26,8 +26,8 @@ Nexora v1 follows an **Express-like developer API** on top of a **Bun-native Req
 ## Quick Start
 
 ```ts
-import { express, cors, Router, headerValue, portRange, statusCode } from "nexora"
-import type { MiniRequest, MiniResponse, NextFunction } from "nexora"
+import { express, cors, Router, headerValue, portRange, statusCode } from "express"
+import type { MiniRequest, MiniResponse, NextFunction } from "express"
 
 const app = express({ requestLogging: true })
 const v1 = new Router()
