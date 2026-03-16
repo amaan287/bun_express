@@ -22,7 +22,7 @@ export function createResponse(): { res: MiniResponse; getResponse: () => Respon
             return this
         },
 
-        send(body: any) {
+        send(body: unknown) {
             if (response) throw new Error(errorMessage.duplicateResponse)
             if (typeof body === "object" && body !== null) {
                 headers.set("Content-Type", "application/json")
@@ -32,7 +32,7 @@ export function createResponse(): { res: MiniResponse; getResponse: () => Respon
             response = new Response(String(body), { status: this.statusCode, headers })
         },
 
-        json(body: any) {
+        json(body: unknown) {
             if (response) throw new Error(errorMessage.duplicateResponse)
             headers.set("Content-Type", "application/json")
             response = new Response(JSON.stringify(body), { status: this.statusCode, headers })

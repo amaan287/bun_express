@@ -1,18 +1,28 @@
-import {express, cors, type MiniResponse } from "./express"
+import { cors, express, type MiniRequest, type MiniResponse, type NextFunction } from "./express"
+import exampleRouter from "./routes"
 
-const app = express()
-// app.use(cors({
-    //     origin: ["https://myapp.com", "https://staging.myapp.com"],
-    //     methods: ["GET", "POST"],
-    //     credentials: true,
-    //     maxAge: 3600,
-    // }))
-app.use(cors())
-app.get("/",async(req:Request,res:MiniResponse)=>{
-    await new Promise(r => setTimeout(r, 1000))
-    res.json({ message: "Async works!" })
+const ENABLE_REQUEST_LOGGING = false
+const app = express({ requestLogging: ENABLE_REQUEST_LOGGING })
+
+app.use(cors({ origin: "*" }))
+
+app.get("/health", (_req: MiniRequest, res: MiniResponse) => {
+    res.json({ status: "ok" })
 })
-app.post('/',async(req:Request,res:MiniResponse)=>{
-res.json({message:"PST is working"})
-        })
+
+app.get("/boom", async (_req: MiniRequest, _res: MiniResponse) => {
+    throw new Error("Simulated failure")
+})
+
+app.use("/api", exampleRouter)
+
+app.use((err: unknown, _req: MiniRequest, res: MiniResponse, _next: NextFunction) => {
+    const message = err instanceof Error ? err.message : "Unknown error"
+    res.status(500).json({ error: message })
+})
+
+app.notFound((req: MiniRequest, res: MiniResponse) => {
+    res.status(404).json({ error: `No route for ${new URL(req.url).pathname}` })
+})
+
 app.listen(3000)

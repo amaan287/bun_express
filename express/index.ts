@@ -1,3 +1,5 @@
 export { express } from "./express"
-export {cors} from "./cors"
-export type { MiniResponse, Middleware, Handler, Next,CorsOptions  } from "./types"
+export { Express } from "./express"
+export { cors } from "./cors"
+export { Router } from "./router"
+export type { MiniResponse, MiniRequest, Middleware, ErrorMiddleware, Handler, NotFoundHandler, NextFunction, CorsOptions, ExpressOptions } from "./types"

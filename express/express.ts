@@ -1,62 +1,82 @@
-import { errorMessage, methods, portRange, statusCode } from "./constants"
+import { errorMessage, portRange, statusCode } from "./constants"
+import { runPipeline } from "./middleware"
+import { createRequest } from "./request"
 import { createResponse } from "./response"
-import { runMiddlewares } from "./middleware"
-import type { Handler, Middleware } from "./types"
+import { Router } from "./router"
+import type { ExpressOptions, MiniRequest, MiniResponse, NotFoundHandler } from "./types"
 
-class Express {
-    private routes: { [key: string]: Handler } = {}
-    private middlewares: Middleware[] = []
+export class Express extends Router {
+    private notFoundHandler: NotFoundHandler | null = null
+    private requestLoggingEnabled: boolean
 
-    use(middleware: Middleware) {return this.middlewares.push(middleware)}
-    get(path: string, handler: Handler) { this.routes[`${methods.get}:${path}`] = handler }
-    post(path: string, handler: Handler) { this.routes[`${methods.post}:${path}`] = handler }
-    put(path: string, handler: Handler) { this.routes[`${methods.put}:${path}`] = handler }
-    delete(path: string, handler: Handler) { this.routes[`${methods.delete}:${path}`] = handler }
+    constructor(options: ExpressOptions = {}) {
+        super()
+        this.requestLoggingEnabled = options.requestLogging ?? false
+    }
 
-    listen(port: number = portRange.defaultPort) {
+    setRequestLogging(enabled: boolean = true): this {
+        this.requestLoggingEnabled = enabled
+        return this
+    }
+
+    setNotFoundHandler(handler: NotFoundHandler): this {
+        this.notFoundHandler = handler
+        return this
+    }
+
+    notFound(handler: NotFoundHandler): this {
+        return this.setNotFoundHandler(handler)
+    }
+
+    async handle(req: Request): Promise<Response> {
+        const start = Date.now()
+        const parsedUrl = new URL(req.url)
+        const { res, getResponse } = createResponse()
+        const miniReq = createRequest(req, {}, parsedUrl.searchParams)
+
+        const hasResponseSent = (): boolean => getResponse() !== null
+
+        await runPipeline(this.getRoutes(), miniReq, res, hasResponseSent, {
+            onNotFound: async (request: MiniRequest, response: MiniResponse) => {
+                if (this.notFoundHandler) {
+                    await this.notFoundHandler(request, response)
+                }
+
+                if (!hasResponseSent()) {
+                    response.status(statusCode.notFound).json({ error: errorMessage.notFound })
+                }
+            },
+            onUnhandledError: async (err: unknown, _request: MiniRequest, response: MiniResponse) => {
+                console.error("Unhandled Route Error:", err)
+                if (!hasResponseSent()) {
+                    response.status(statusCode.internServer).json({ error: errorMessage.internalServer })
+                }
+            }
+        })
+
+        const finalResponse = getResponse() || new Response(errorMessage.noResponseError, { status: 500 })
+        if (this.requestLoggingEnabled) {
+            const duration = Date.now() - start
+            console.log(`${miniReq.method} ${parsedUrl.pathname} ${finalResponse.status} - ${duration}ms`)
+        }
+
+        return finalResponse
+    }
+
+    listen(port: number = portRange.defaultPort): void {
         if (!Number.isInteger(port) || port < portRange.minimumPort || port > portRange.maximumPort) {
             throw new RangeError(errorMessage.portRangeExceed)
         }
 
         Bun.serve({
             port,
-            fetch: async (req) => {
-                const start = Date.now()
-                const key = `${req.method}:${new URL(req.url).pathname}`
-                const handler = this.routes[key]
-
-                if (!handler) {
-                    return new Response(errorMessage.notFound, { status: statusCode.notFound })
-                }
-
-                const { res, getResponse } = createResponse()
-
-                try {
-                    await runMiddlewares(this.middlewares, req, res)
-
-                    if (!getResponse()) {
-                        await handler(req, res)
-                    }
-
-                    const finalResponse = getResponse() ?? new Response(errorMessage.noResponseError)
-                    const duration = Date.now() - start
-                    console.log(`${req.method} ${new URL(req.url).pathname} ${finalResponse.status} - ${duration}ms`)
-                    return finalResponse
-                } catch (err: any) {
-                    const duration = Date.now() - start
-                    console.error("Route error:", err)
-                    console.log(`${req.method} ${new URL(req.url).pathname} ${statusCode.internServer} - ${duration}ms`)
-                    return new Response(
-                        JSON.stringify({ error: errorMessage.internalServer }),
-                        { status: statusCode.internServer, headers: { "Content-Type": "application/json" } }
-                    )
-                }
-            }
+            fetch: (req: Request) => this.handle(req)
         })
-        console.log(`server is running on port http://localhost:${port}`)
+
+        console.log(`Server is running on http://localhost:${port}`)
     }
 }
 
-export  function express() {
-    return new Express()
+export function express(options: ExpressOptions = {}): Express {
+    return new Express(options)
 }
