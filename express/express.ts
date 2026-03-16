@@ -54,7 +54,7 @@ export class Express extends Router {
             }
         })
 
-        const finalResponse = getResponse() || new Response(errorMessage.noResponseError, { status: 500 })
+        const finalResponse = getResponse() || new Response(errorMessage.noResponseError, { status: statusCode.internServer })
         if (this.requestLoggingEnabled) {
             const duration = Date.now() - start
             console.log(`${miniReq.method} ${parsedUrl.pathname} ${finalResponse.status} - ${duration}ms`)

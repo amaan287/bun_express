@@ -1,4 +1,5 @@
 import type { MiniRequest } from "./types";
+import { errorMessage, headerName, headerValue } from "./constants";
 
 export function createRequest(
     req: Request,
@@ -17,9 +18,9 @@ export function createRequest(
 
             if (prop === "json") {
                 return async <T = unknown>(): Promise<T> => {
-                    const contentType = req.headers.get("content-type") || "";
-                    if (!contentType.includes("application/json")) {
-                        throw new Error("Content-Type must be application/json");
+                    const contentType = req.headers.get(headerName.contentType) || "";
+                    if (!contentType.includes(headerValue.applicationJson)) {
+                        throw new Error(errorMessage.invalidJsonContentType);
                     }
                     // Clone so it can be read multiple times if needed, though usually it's consumed once.
                     return await req.clone().json() as T;

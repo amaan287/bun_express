@@ -1,4 +1,4 @@
-import { errorMessage, statusCode } from "./constants"
+import { errorMessage, headerName, headerValue, statusCode } from "./constants"
 import type { MiniResponse } from "./types"
 
 export function createResponse(): { res: MiniResponse; getResponse: () => Response | null } {
@@ -25,7 +25,7 @@ export function createResponse(): { res: MiniResponse; getResponse: () => Respon
         send(body: unknown) {
             if (response) throw new Error(errorMessage.duplicateResponse)
             if (typeof body === "object" && body !== null) {
-                headers.set("Content-Type", "application/json")
+                headers.set(headerName.contentType, headerValue.applicationJson)
                 response = new Response(JSON.stringify(body), { status: this.statusCode, headers })
                 return
             }
@@ -34,13 +34,13 @@ export function createResponse(): { res: MiniResponse; getResponse: () => Respon
 
         json(body: unknown) {
             if (response) throw new Error(errorMessage.duplicateResponse)
-            headers.set("Content-Type", "application/json")
+            headers.set(headerName.contentType, headerValue.applicationJson)
             response = new Response(JSON.stringify(body), { status: this.statusCode, headers })
         },
 
         redirect(url: string, status: number = statusCode.defaultRedirect) {
             if (response) throw new Error(errorMessage.duplicateResponse)
-            headers.set("Location", url)
+            headers.set(headerName.location, url)
             response = new Response(null, { status, headers })
         }
     }

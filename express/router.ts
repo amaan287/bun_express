@@ -1,12 +1,12 @@
 import type { ErrorMiddleware, Handler, MatchResult, Middleware, RouteRecord } from "./types"
-import { methods } from "./constants"
+import { httpMethod, methods } from "./constants"
 
 export class Router {
     protected _routes: RouteRecord[] = []
     private nextOrder = 0
 
     private normalizePath(method: string, path: string): string {
-        if (!path && method !== "USE") {
+        if (!path && method !== httpMethod.use) {
             return "/"
         }
 
@@ -14,7 +14,7 @@ export class Router {
     }
 
     private getPriority(method: string, path: string): number {
-        if (method === "USE") {
+        if (method === httpMethod.use) {
             return 0
         }
         const hasWildcard = path.includes("*")
@@ -41,7 +41,7 @@ export class Router {
             return "([^\\/]+)"
         })
 
-        if (method !== "USE") {
+        if (method !== httpMethod.use) {
             regexStr = `^${regexStr}$`
         } else {
             regexStr = `^${regexStr}(?:/|$)`
@@ -65,7 +65,7 @@ export class Router {
             if (path instanceof Router) {
                 this.mountRouter("", path)
             } else {
-                this.addRoute("USE", "", path)
+                this.addRoute(httpMethod.use, "", path)
             }
             return this
         }
@@ -73,7 +73,7 @@ export class Router {
         if (middlewareOrRouter instanceof Router) {
             this.mountRouter(path, middlewareOrRouter)
         } else if (middlewareOrRouter) {
-            this.addRoute("USE", path, middlewareOrRouter)
+            this.addRoute(httpMethod.use, path, middlewareOrRouter)
         }
 
         return this

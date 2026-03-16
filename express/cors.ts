@@ -1,12 +1,13 @@
 import type { CorsOptions, Middleware } from "./types"
+import { corsDefaults, headerName, headerValue, httpMethod, statusCode } from "./constants"
 
 const defaultOptions: Required<Omit<CorsOptions, "origin">> & { origin: string } = {
-    origin: "*",
-    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: [],
-    credentials: false,
-    maxAge: 86400
+    origin: headerValue.wildcard,
+    methods: [...corsDefaults.methods],
+    allowedHeaders: [...corsDefaults.allowedHeaders],
+    exposedHeaders: [...corsDefaults.exposedHeaders],
+    credentials: corsDefaults.credentials,
+    maxAge: corsDefaults.maxAge
 }
 
 function resolveOrigin(
@@ -18,8 +19,8 @@ function resolveOrigin(
         return null
     }
 
-    if (allowedOrigin === "*") {
-        return credentials ? requestOrigin : "*"
+    if (allowedOrigin === headerValue.wildcard) {
+        return credentials ? requestOrigin : headerValue.wildcard
     }
 
     if (typeof allowedOrigin === "string") {
@@ -41,33 +42,33 @@ export function cors(options: CorsOptions = {}): Middleware {
     const opts = { ...defaultOptions, ...options }
 
     return async (req, res, next) => {
-        const requestOrigin = req.headers.get("Origin")
+        const requestOrigin = req.headers.get(headerName.origin)
         const resolvedOrigin = resolveOrigin(opts.origin, requestOrigin, opts.credentials)
 
         if (resolvedOrigin) {
-            res.set("Access-Control-Allow-Origin", resolvedOrigin)
+            res.set(headerName.accessControlAllowOrigin, resolvedOrigin)
 
-            if (resolvedOrigin !== "*") {
-                res.set("Vary", "Origin")
+            if (resolvedOrigin !== headerValue.wildcard) {
+                res.set(headerName.vary, headerValue.varyOrigin)
             }
 
             if (opts.credentials) {
-                res.set("Access-Control-Allow-Credentials", "true")
+                res.set(headerName.accessControlAllowCredentials, headerValue.true)
             }
 
             if (opts.exposedHeaders.length > 0) {
-                res.set("Access-Control-Expose-Headers", opts.exposedHeaders.join(", "))
+                res.set(headerName.accessControlExposeHeaders, opts.exposedHeaders.join(", "))
             }
         }
 
-        if (req.method === "OPTIONS") {
+        if (req.method === httpMethod.options) {
             if (resolvedOrigin) {
-                res.set("Access-Control-Allow-Methods", opts.methods.join(", "))
-                res.set("Access-Control-Allow-Headers", opts.allowedHeaders.join(", "))
-                res.set("Access-Control-Max-Age", String(opts.maxAge))
+                res.set(headerName.accessControlAllowMethods, opts.methods.join(", "))
+                res.set(headerName.accessControlAllowHeaders, opts.allowedHeaders.join(", "))
+                res.set(headerName.accessControlMaxAge, String(opts.maxAge))
             }
 
-            res.status(204).send("")
+            res.status(statusCode.noContent).send("")
             return
         }
 

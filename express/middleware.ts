@@ -1,4 +1,5 @@
 import type { ErrorMiddleware, Middleware, MiniRequest, MiniResponse, RouteRecord } from "./types"
+import { httpMethod } from "./constants"
 
 interface PreparedRoute {
     route: RouteRecord
@@ -63,7 +64,7 @@ export async function runPipeline(
 
         const isErrorMiddleware = route.handler.length === 4
 
-        if (route.method === "USE") {
+        if (route.method === httpMethod.use) {
             if (isErrorMiddleware) {
                 errorMiddlewares.push(matchedRoute)
             } else {
