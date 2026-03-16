@@ -1,4 +1,4 @@
-import { Router, successMessage, type MiniRequest, type MiniResponse, type NextFunction } from "./express"
+import { Router, successMessage, type MiniRequest, type MiniResponse, type NextFunction } from "../express"
 
 const apiRouter = new Router()
 const v1Router = new Router()

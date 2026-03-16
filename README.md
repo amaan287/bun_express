@@ -79,6 +79,15 @@ bun test
 
 You can test in-memory without opening a socket by calling `app.handle(new Request(...))`.
 
+## Example App
+
+- Example files live in `example/index.ts` and `example/routes.ts`.
+- Run the example with:
+
+```bash
+bun run example/index.ts
+```
+
 ## Internal Lifecycle
 
 See `REQUEST_LIFECYCLE.md` for full lifecycle details.
