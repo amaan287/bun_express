@@ -26,18 +26,13 @@ Nexora v1 follows an **Express-like developer API** on top of a **Bun-native Req
 ## Quick Start
 
 ```ts
-import { express, cors, Router } from "nexora"
+import { express, cors, Router, headerValue, portRange, statusCode } from "nexora"
 import type { MiniRequest, MiniResponse, NextFunction } from "nexora"
 
-const app = express()
+const app = express({ requestLogging: true })
 const v1 = new Router()
 
-app.use(cors({ origin: "*" }))
-
-app.use(async (req: MiniRequest, _res: MiniResponse, next: NextFunction) => {
-    console.log(req.method, new URL(req.url).pathname)
-    await next()
-})
+app.use(cors({ origin: headerValue.wildcard }))
 
 v1.get("/users/:id", (req: MiniRequest, res: MiniResponse) => {
     res.json({ id: req.params.id })
@@ -51,14 +46,14 @@ app.get("/boom", async () => {
 
 app.use((err: unknown, _req: MiniRequest, res: MiniResponse, _next: NextFunction) => {
     const message = err instanceof Error ? err.message : "Unknown error"
-    res.status(500).json({ error: message })
+    res.status(statusCode.internServer).json({ error: message })
 })
 
 app.notFound((req: MiniRequest, res: MiniResponse) => {
-    res.status(404).json({ error: `No route for ${new URL(req.url).pathname}` })
+    res.status(statusCode.notFound).json({ error: `No route for ${new URL(req.url).pathname}` })
 })
 
-app.listen(3000)
+app.listen(portRange.defaultPort)
 ```
 
 ## Request Helpers
@@ -91,3 +86,9 @@ See `REQUEST_LIFECYCLE.md` for full lifecycle details.
 ## Packaging Readiness
 
 See `PACKAGING_CHECKLIST.md` for publish/export/version steps.
+
+## Community
+
+- Contribution guide: `CONTRIBUTING.md`
+- Code of Conduct: `CODE_OF_CONDUCT.md`
+- License: `LICENSE`
